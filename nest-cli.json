@@ -1,11 +1,14 @@
 {
   "$schema": "https://json.schemastore.org/nest-cli",
   "collection": "@nestjs/schematics",
-  "monorepo": true,
+  "sourceRoot": "apps/govstack-platform/src",
   "compilerOptions": {
     "deleteOutDir": true,
-    "webpack": true
+    "webpack": true,
+    "tsConfigPath": "apps/govstack-platform/tsconfig.app.json"
   },
+  "monorepo": true,
+  "root": "apps/govstack-platform",
   "projects": {
     "filemanagement": {
       "type": "application",
@@ -23,6 +26,15 @@
       "sourceRoot": "apps/gateway/src",
       "compilerOptions": {
         "tsConfigPath": "apps/gateway/tsconfig.app.json"
+      }
+    },
+    "govstack-platform": {
+      "type": "application",
+      "root": "apps/govstack-platform",
+      "entryFile": "main",
+      "sourceRoot": "apps/govstack-platform/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/govstack-platform/tsconfig.app.json"
       }
     },
     "identity": {
