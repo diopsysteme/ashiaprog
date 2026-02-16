@@ -1,0 +1,141 @@
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app/app.module';
+import { createProxyMiddleware } from 'http-proxy-middleware';
+import * as swaggerUi from 'swagger-ui-express';
+import { Express } from 'express';
+
+type OpenApiSpec = Record<string, any>;
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  const expressApp = app.getHttpAdapter().getInstance() as Express;
+  expressApp.set('trust proxy', 1);
+
+  app.enableCors();
+
+  app.use(
+    '/identity',
+    createProxyMiddleware({
+      target: process.env.IDENTITY_URL || 'http://identity:3001',
+      changeOrigin: true,
+      pathRewrite: { '^/identity': '' },
+    }),
+  );
+
+  app.use(
+    '/filemanagement',
+    createProxyMiddleware({
+      target: process.env.FILE_URL || 'http://filemanagement:3002',
+      changeOrigin: true,
+      pathRewrite: { '^/filemanagement': '' },
+    }),
+  );
+
+  app.use(
+    '/messaging',
+    createProxyMiddleware({
+      target: process.env.MESSAGING_URL || 'http://messaging:3003',
+      changeOrigin: true,
+      pathRewrite: { '^/messaging': '' },
+    }),
+  );
+
+
+  const serveSpec = (
+    specPath: string,
+    upstreamDocsJsonUrl: string,
+    gatewayBasePath: string,
+    directUrl?: string,
+  ) => {
+    expressApp.get(specPath, async (req, res) => {
+      try {
+        const response = await fetch(upstreamDocsJsonUrl);
+
+        if (!response.ok) {
+          console.error(
+            `Failed to fetch spec from ${upstreamDocsJsonUrl}: ${response.status}`,
+          );
+          return res.status(502).json({
+            error: `Failed to fetch spec from ${upstreamDocsJsonUrl}`,
+            status: response.status,
+          });
+        }
+
+        const spec: OpenApiSpec = await response.json();
+
+        const protocol = req.protocol;
+        const host = req.get('host');
+        const baseUrl = `${protocol}://${host}${gatewayBasePath}`;
+
+        spec.servers = [{ url: baseUrl, description: 'Via Gateway' }];
+
+        if (directUrl) {
+          spec.servers.push({ url: directUrl, description: 'Direct' });
+        }
+
+        return res.json(spec);
+      } catch (error: any) {
+        console.error(`Error fetching spec ${specPath}:`, error);
+        return res.status(500).json({
+          error: `Failed to fetch spec: ${specPath}`,
+          details: error?.message ?? String(error),
+        });
+      }
+    });
+  };
+
+  serveSpec(
+    '/specs/identity.json',
+    'http://identity:3001/api/v1/docs-json',
+    '/identity',
+    'http://localhost:3001',
+  );
+
+  serveSpec(
+    '/specs/filemanagement.json',
+    'http://filemanagement:3002/api/v1/docs-json',
+    '/filemanagement',
+    'http://localhost:3002',
+  );
+
+  serveSpec(
+    '/specs/messaging.json',
+    'http://messaging:3003/api/v1/docs-json',
+    '/messaging',
+    'http://localhost:3003',
+  );
+
+  // --- Swagger HUB (dropdown for services) ---
+  app.use(
+    '/docs',
+    swaggerUi.serve,
+    swaggerUi.setup(null, {
+      explorer: true,
+      swaggerOptions: {
+        urls: [
+          { name: 'Identity', url: '/specs/identity.json' },
+          { name: 'Filemanagement', url: '/specs/filemanagement.json' },
+          { name: 'Messaging', url: '/specs/messaging.json' },
+        ],
+        persistAuthorization: true,
+      },
+    }),
+  );
+
+  // --- Health check endpoint ---
+  expressApp.get('/health', (_req, res) => {
+    res.json({
+      status: 'ok',
+      service: 'gateway',
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+
+  console.log('running');
+}
+
+bootstrap();

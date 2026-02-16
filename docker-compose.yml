@@ -1,0 +1,45 @@
+services:
+  gateway:
+    build: .
+    command: npm run start:dev gateway
+    ports: ["3000:3000"]
+    environment:
+      IDENTITY_URL: "http://identity:3001"
+      FILE_URL: "http://filemanagement:3002"
+      MESSAGING_URL: "http://messaging:3003"
+      DIRECT_IDENTITY_URL: "http://localhost:3001"
+      DIRECT_FILE_URL: "http://localhost:3002"
+      DIRECT_MESSAGING_URL: "http://localhost:3003"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    depends_on: [identity, filemanagement, messaging]
+
+  identity:
+    build: .
+    command: npm run start:dev identity
+    ports: ["3001:3001"]
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      PORT: 3001
+
+  filemanagement:
+    build: .
+    command: npm run start:dev filemanagement
+    ports: ["3002:3002"]
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      PORT: 3002
+  messaging:
+    build: .
+    command: npm run start:dev messaging
+    ports: ["3003:3003"]
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      PORT: 3003
