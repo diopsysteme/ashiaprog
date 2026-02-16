@@ -20,7 +20,7 @@ export class IdentityController {
     type: ApiErrorResponseSwagger,
   })
   getHello(): UserDto {
-    throw new AshiaException('PHONE_ALREADY_EXISTS');
+    // throw new AshiaException('PHONE_ALREADY_EXISTS');
     return this.identityService.getHello();
   }
 }
