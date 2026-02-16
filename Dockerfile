@@ -14,26 +14,20 @@
 
 
 
-FROM node:20-alpine AS build
+FROM node:20-alpine AS deps
 WORKDIR /usr/src/app
-
 COPY package*.json ./
-RUN npm ci
-
-COPY nest-cli.json tsconfig*.json ./
-COPY apps ./apps
-COPY libs ./libs
-
-RUN npm run build
+RUN npm ci --only=production
 
 FROM node:20-alpine
 WORKDIR /usr/src/app
 ENV NODE_ENV=production
 
 COPY package*.json ./
-RUN npm ci --only=production
+COPY --from=deps /usr/src/app/node_modules ./node_modules
 
-COPY --from=build /usr/src/app/dist ./dist
+# Copy pre-built dist folder from your local machine
+COPY dist ./dist
 
 ENV APP_NAME=gateway
 ENV PORT=3000
