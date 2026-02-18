@@ -43,3 +43,20 @@ services:
       - /usr/src/app/node_modules
     environment:
       PORT: 3003
+  workflow:
+    build: .
+    command: npm run start:dev workflow
+    ports: [ "3006:3006" ]
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      PORT: 3006
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin

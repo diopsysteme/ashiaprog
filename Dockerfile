@@ -60,33 +60,47 @@
 #
 #CMD ["sh", "-c", "node dist/apps/$APP_NAME/main.js"]
 
+#
+#FROM node:20-alpine AS build
+#WORKDIR /usr/src/app
+#
+#COPY package*.json ./
+#RUN npm ci
+#
+#COPY nest-cli.json tsconfig*.json ./
+#COPY apps ./apps
+#COPY libs ./libs
+#
+## Build only the apps you actually have
+#RUN npx nest build gateway \
+# && npx nest build identity \
+# && npx nest build filemanagement \
+# && npx nest build messaging
+#
+#FROM node:20-alpine
+#WORKDIR /usr/src/app
+#ENV NODE_ENV=production
+#
+#COPY package*.json ./
+#RUN npm ci --only=production
+#
+#COPY --from=build /usr/src/app/dist ./dist
+#
+#ENV APP_NAME=gateway
+#ENV PORT=3000
+#
+#CMD ["sh", "-c", "node dist/apps/$APP_NAME/main.js"]
 
-FROM node:20-alpine AS build
+
+FROM node:20-alpine
 WORKDIR /usr/src/app
 
 COPY package*.json ./
-RUN npm ci
+RUN npm ci  # installe TOUT (devDependencies inclus)
 
 COPY nest-cli.json tsconfig*.json ./
 COPY apps ./apps
 COPY libs ./libs
 
-# Build only the apps you actually have
-RUN npx nest build gateway \
- && npx nest build identity \
- && npx nest build filemanagement \
- && npx nest build messaging
-
-FROM node:20-alpine
-WORKDIR /usr/src/app
-ENV NODE_ENV=production
-
-COPY package*.json ./
-RUN npm ci --only=production
-
-COPY --from=build /usr/src/app/dist ./dist
-
-ENV APP_NAME=gateway
 ENV PORT=3000
-
-CMD ["sh", "-c", "node dist/apps/$APP_NAME/main.js"]
+CMD ["npm", "run", "start:dev", "gateway"]

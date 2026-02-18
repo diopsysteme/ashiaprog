@@ -1,14 +1,13 @@
 import { NestFactory, Reflector } from '@nestjs/core';
-import { FilemanagementModule } from './filemanagement.module';
-import { setUpSwagger } from '../../../libs/shared/config/swagger.config';
-import { SuccessResponseInterceptor } from '../../../libs/shared/filter/success-response.interceptor';
+import { WorkflowModule } from './workflow.module';
 import { ValidationPipe } from '@nestjs/common';
 import { GlobalExceptionHandlerFilter } from '../../../libs/shared/filter/global-exception-handler.filter';
+import { SuccessResponseInterceptor } from '../../../libs/shared/filter/success-response.interceptor';
+import { setUpSwagger } from '../../../libs/shared/config/swagger.config';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
 async function bootstrap() {
-  const app = await NestFactory.create(FilemanagementModule);
-
+  const app = await NestFactory.create(WorkflowModule);
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -19,11 +18,10 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new GlobalExceptionHandlerFilter());
   app.useGlobalInterceptors(new SuccessResponseInterceptor(app.get(Reflector)));
-
   app.setGlobalPrefix('api/v1');
   setUpSwagger(app, {
-    title: 'FILE API',
-    description: 'GovStack FILE Building Block',
+    title: 'WORKFLOW API',
+    description: 'GovStack Workflow Building Block',
     version: '1.0.0',
     path: 'docs',
   });
@@ -32,12 +30,13 @@ async function bootstrap() {
     transport: Transport.RMQ,
     options: {
       urls: [process.env.RABBITMQ_URL ?? 'amqp://admin:admin@rabbitmq:5672'],
-      queue: 'fm_queue',
+      queue: 'w_queue',
       queueOptions: { durable: true },
       noAck: false,
-      exchange: 'events',
     },
   });
-  await app.listen(process.env.PORT ?? 3001);
+  await app.startAllMicroservices();
+  await app.listen(process.env.port ?? 3006);
 }
+
 bootstrap();

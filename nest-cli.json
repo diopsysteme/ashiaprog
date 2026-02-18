@@ -55,6 +55,15 @@
         "tsConfigPath": "apps/messaging/tsconfig.app.json"
       }
     },
+    "rmq": {
+      "type": "library",
+      "root": "libs/rmq",
+      "entryFile": "index",
+      "sourceRoot": "libs/rmq/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/rmq/tsconfig.lib.json"
+      }
+    },
     "shared": {
       "type": "library",
       "root": "libs/shared",
@@ -62,6 +71,15 @@
       "sourceRoot": "libs/shared/src",
       "compilerOptions": {
         "tsConfigPath": "libs/shared/tsconfig.lib.json"
+      }
+    },
+    "workflow": {
+      "type": "application",
+      "root": "apps/workflow",
+      "entryFile": "main",
+      "sourceRoot": "apps/workflow/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/workflow/tsconfig.app.json"
       }
     }
   }

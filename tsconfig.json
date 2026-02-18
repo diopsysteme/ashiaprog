@@ -22,6 +22,12 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
+      "@app/rmq": [
+        "libs/rmq/src"
+      ],
+      "@app/rmq/*": [
+        "libs/rmq/src/*"
+      ],
       "@app/shared": [
         "libs/shared/src"
       ],

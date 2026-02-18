@@ -41,7 +41,7 @@ async function bootstrap() {
   const IDENTITY_URL = env('IDENTITY_URL', 'http://identity:3001');
   const FILE_URL = env('FILE_URL', 'http://filemanagement:3002');
   const MESSAGING_URL = env('MESSAGING_URL', 'http://messaging:3003');
-
+  const WORKFLOW_URL = env('WORKFLOW_URL', 'http://workflow:3006');
   app.use(
     '/identity',
     createProxyMiddleware({
@@ -68,6 +68,14 @@ async function bootstrap() {
       pathRewrite: { '^/messaging': '' },
     }),
   );
+  app.use(
+    '/workflow',
+    createProxyMiddleware({
+      target: WORKFLOW_URL,
+      changeOrigin: true,
+      pathRewrite: { '^/workflow': '' },
+    }),
+  );
 
   const IDENTITY_DOCS_JSON = env(
     'IDENTITY_DOCS_JSON',
@@ -78,11 +86,12 @@ async function bootstrap() {
     'MESSAGING_DOCS_JSON',
     `${MESSAGING_URL}/api/v1/docs-json`,
   );
+  const WORKFLOW_DOCS_JSON = env('WORKFLOW_DOCS_JSON', `${WORKFLOW_URL}/api/v1/docs-json`);
 
   const DIRECT_IDENTITY_URL = env('DIRECT_IDENTITY_URL');
   const DIRECT_FILE_URL = env('DIRECT_FILE_URL');
   const DIRECT_MESSAGING_URL = env('DIRECT_MESSAGING_URL');
-
+  const DIRECT_WORKFLOW_URL = env('DIRECT_WORKFLOW_URL');
   const serveSpec = (
     specPath: string,
     upstreamDocsJsonUrl: string,
@@ -144,6 +153,13 @@ async function bootstrap() {
     DIRECT_MESSAGING_URL,
   );
 
+  serveSpec(
+    '/specs/workflow.json',
+    WORKFLOW_DOCS_JSON,
+    '/workflow',
+    DIRECT_WORKFLOW_URL,
+  );
+
   app.use(
     '/docs',
     swaggerUi.serve,
@@ -154,6 +170,7 @@ async function bootstrap() {
           { name: 'Identity', url: '/specs/identity.json' },
           { name: 'Filemanagement', url: '/specs/filemanagement.json' },
           { name: 'Messaging', url: '/specs/messaging.json' },
+          { name: 'Workflow', url: '/specs/workflow.json' },
         ],
         persistAuthorization: true,
       },
